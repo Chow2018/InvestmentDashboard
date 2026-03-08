@@ -21,7 +21,10 @@ foreach ($assets as $a) {
 <body>
     <header class="header">
         <h1><?php echo htmlspecialchars($page_title); ?></h1>
-        <p class="total">Total (HKD): <strong><?php echo number_format($total_hkd, 2); ?></strong></p>
+        <div class="header-actions">
+            <p class="total">Total (HKD): <strong><?php echo number_format($total_hkd, 2); ?></strong></p>
+            <a href="add.php" class="btn btn-add">Add asset</a>
+        </div>
     </header>
 
     <main class="main">
@@ -35,7 +38,7 @@ foreach ($assets as $a) {
                     <th>Exch. rate</th>
                     <th>Qty</th>
                     <th>Amount (HKD)</th>
-                    <th></th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -48,7 +51,13 @@ foreach ($assets as $a) {
                     <td><?php echo number_format((float)($a['exch_rate'] ?? 0), 6); ?></td>
                     <td><?php echo (int)($a['qty'] ?? 0); ?></td>
                     <td><?php echo number_format((float)($a['amt_hkd'] ?? 0), 2); ?></td>
-                    <td><a href="edit.php?id=<?php echo (int) $a['ID']; ?>" class="btn btn-edit">Edit</a></td>
+                    <td class="actions-cell">
+                        <a href="edit.php?id=<?php echo (int) $a['ID']; ?>" class="btn btn-edit">Edit</a>
+                        <form method="post" action="delete.php" class="inline-form" onsubmit="return confirm('Delete this asset?');">
+                            <input type="hidden" name="id" value="<?php echo (int) $a['ID']; ?>">
+                            <button type="submit" class="btn btn-delete">Delete</button>
+                        </form>
+                    </td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>

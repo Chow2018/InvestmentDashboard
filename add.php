@@ -1,48 +1,53 @@
 <?php
 require_once __DIR__ . '/includes/db.php';
 
-$id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-if ($id <= 0) {
-    header('Location: index.php');
-    exit;
-}
-
-$stmt = $pdo->prepare('SELECT ID, type, description, amt, exch_rate, qty, amt_hkd FROM asset WHERE ID = ?');
-$stmt->execute([$id]);
-$asset = $stmt->fetch();
-
-if (!$asset) {
-    header('Location: index.php');
-    exit;
-}
-
+$page_title = 'Add Asset';
 $message = '';
 $error = '';
 
+// Default form values
+$form = [
+    'type'        => '',
+    'description' => '',
+    'amt'         => '',
+    'exch_rate'   => '',
+    'qty'         => '',
+    'amt_hkd'     => '',
+];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $type        = trim($_POST['type'] ?? '');
-    $description = trim($_POST['description'] ?? '');
-    $amt         = isset($_POST['amt']) ? (float) str_replace(',', '', $_POST['amt']) : 0;
-    $exch_rate   = isset($_POST['exch_rate']) ? (float) str_replace(',', '', $_POST['exch_rate']) : 0;
-    $qty         = isset($_POST['qty']) ? (int) $_POST['qty'] : 0;
-    $amt_hkd     = isset($_POST['amt_hkd']) ? (float) str_replace(',', '', $_POST['amt_hkd']) : 0;
+    $form['type']        = trim($_POST['type'] ?? '');
+    $form['description'] = trim($_POST['description'] ?? '');
+    $form['amt']         = trim($_POST['amt'] ?? '');
+    $form['exch_rate']   = trim($_POST['exch_rate'] ?? '');
+    $form['qty']         = trim($_POST['qty'] ?? '');
+    $form['amt_hkd']     = trim($_POST['amt_hkd'] ?? '');
 
-    $update = $pdo->prepare('UPDATE asset SET type = ?, description = ?, amt = ?, exch_rate = ?, qty = ?, amt_hkd = ? WHERE ID = ?');
-    $update->execute([$type, $description, $amt, $exch_rate, $qty, $amt_hkd, $id]);
-    $message = 'Asset updated.';
+    $amt       = $form['amt'] !== '' ? (float) str_replace(',', '', $form['amt']) : 0;
+    $exch_rate = $form['exch_rate'] !== '' ? (float) str_replace(',', '', $form['exch_rate']) : 0;
+    $qty       = $form['qty'] !== '' ? (int) $form['qty'] : 0;
+    $amt_hkd   = $form['amt_hkd'] !== '' ? (float) str_replace(',', '', $form['amt_hkd']) : 0;
 
-    $asset = [
-        'ID'          => $asset['ID'],
-        'type'        => $type,
-        'description' => $description,
-        'amt'         => $amt,
-        'exch_rate'   => $exch_rate,
-        'qty'         => $qty,
-        'amt_hkd'     => $amt_hkd,
-    ];
+    try {
+        $stmt = $pdo->prepare(
+            'INSERT INTO asset (type, description, amt, exch_rate, qty, amt_hkd) VALUES (?, ?, ?, ?, ?, ?)'
+        );
+        $stmt->execute([
+            $form['type'],
+            $form['description'],
+            $amt,
+            $exch_rate,
+            $qty,
+            $amt_hkd,
+        ]);
+
+        header('Location: index.php');
+        exit;
+    } catch (PDOException $e) {
+        $error = 'Failed to create asset: ' . htmlspecialchars($e->getMessage());
+    }
 }
 
-$page_title = 'Edit Asset #' . $asset['ID'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -67,33 +72,32 @@ $page_title = 'Edit Asset #' . $asset['ID'];
         <?php endif; ?>
 
         <form method="post" class="edit-form">
-            <input type="hidden" name="id" value="<?php echo (int) $asset['ID']; ?>">
             <div class="form-row">
                 <label for="type">Type</label>
-                <input type="text" id="type" name="type" maxlength="200" value="<?php echo htmlspecialchars($asset['type'] ?? ''); ?>">
+                <input type="text" id="type" name="type" maxlength="200" value="<?php echo htmlspecialchars($form['type']); ?>">
             </div>
             <div class="form-row">
                 <label for="description">Description</label>
-                <input type="text" id="description" name="description" maxlength="400" value="<?php echo htmlspecialchars($asset['description'] ?? ''); ?>">
+                <input type="text" id="description" name="description" maxlength="400" value="<?php echo htmlspecialchars($form['description']); ?>">
             </div>
             <div class="form-row">
                 <label for="amt">Amount</label>
-                <input type="text" id="amt" name="amt" value="<?php echo htmlspecialchars($asset['amt'] ?? '0'); ?>">
+                <input type="text" id="amt" name="amt" value="<?php echo htmlspecialchars($form['amt']); ?>">
             </div>
             <div class="form-row">
                 <label for="exch_rate">Exchange rate</label>
-                <input type="text" id="exch_rate" name="exch_rate" value="<?php echo htmlspecialchars($asset['exch_rate'] ?? '0'); ?>">
+                <input type="text" id="exch_rate" name="exch_rate" value="<?php echo htmlspecialchars($form['exch_rate']); ?>">
             </div>
             <div class="form-row">
                 <label for="qty">Quantity</label>
-                <input type="number" id="qty" name="qty" value="<?php echo (int)($asset['qty'] ?? 0); ?>">
+                <input type="number" id="qty" name="qty" value="<?php echo htmlspecialchars($form['qty']); ?>">
             </div>
             <div class="form-row">
                 <label for="amt_hkd">Amount (HKD)</label>
-                <input type="text" id="amt_hkd" name="amt_hkd" value="<?php echo htmlspecialchars($asset['amt_hkd'] ?? '0'); ?>" readonly>
+                <input type="text" id="amt_hkd" name="amt_hkd" value="<?php echo htmlspecialchars($form['amt_hkd']); ?>" readonly>
             </div>
             <div class="form-actions">
-                <button type="submit" class="btn btn-save">Save changes</button>
+                <button type="submit" class="btn btn-save">Create asset</button>
                 <a href="index.php" class="btn btn-cancel">Cancel</a>
             </div>
         </form>
@@ -135,3 +139,4 @@ $page_title = 'Edit Asset #' . $asset['ID'];
     </script>
 </body>
 </html>
+

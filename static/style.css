@@ -24,6 +24,12 @@ body {
     border-bottom: 1px solid #ddd;
 }
 
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
 .header h1 {
     margin: 0;
     font-size: 1.5rem;
@@ -98,6 +104,33 @@ body {
 
 .btn-save:hover {
     background: #047857;
+}
+
+.btn-add {
+    background: #10b981;
+    color: #fff;
+}
+
+.btn-add:hover {
+    background: #059669;
+}
+
+.btn-delete {
+    background: #dc2626;
+    color: #fff;
+}
+
+.btn-delete:hover {
+    background: #b91c1c;
+}
+
+.inline-form {
+    display: inline;
+    margin: 0 0 0 0.4rem;
+}
+
+.actions-cell {
+    white-space: nowrap;
 }
 
 .empty {
